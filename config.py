@@ -6,11 +6,13 @@ class Config:
         self.DESCRIPTIONS_FILE = './data/descriptions.json'
         self.NO_DESCRIPTIONS_FILE = './data/no_descriptions.json'
         self.EMBEDDINGS_FILE = './data/embeddings.json'
+        self.SPIDER_QUERY_EMBEDDINGS_FILE = './data/spider_query_embeddings.json'
 
         self.SPIDER_SCHEMA = self.inport(self.SPIDER_SCHEMA_FILE)
         self.DESCRIPTIONS = self.inport(self.DESCRIPTIONS_FILE)
         self.NO_DESCRIPTIONS = self.inport(self.NO_DESCRIPTIONS_FILE)
         self.EMBEDDINGS = self.inport(self.EMBEDDINGS_FILE)
+        self.SPIDER_QUERY_EMBEDDINGS = self.inport(self.SPIDER_QUERY_EMBEDDINGS_FILE)
     
     def inport(self, file):
         import os
