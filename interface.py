@@ -44,6 +44,26 @@ class Interface:
                     encoding_format="float"
                     ).data[0].embedding
 
+    def get_description(self, description):
+        self.prompt.set_description_prompt()
+        self.prompt.prompt_template =\
+            self.prompt.prompt_template.format(
+                    self.prompt.task_template,
+                    description
+                    )
+        self.prompt.user_content["content"] = (
+            self.prompt.user_content["content"].format(
+                self.prompt.prompt_template
+                )
+            )
+        self.prompt.messages.append(self.prompt.user_content)
+        response = self.query_chatGPT(self.prompt.messages)
+        description = response[
+                response.find("New:")+len("New:"):
+                ]
+        print(description)
+        return description.strip()
+
     def get_descriptions(self,
                         dataset,
                         retrieved_dataset,
@@ -55,7 +75,6 @@ class Interface:
                     query
                     )
         response = self.query_chatGPT(prompt)
-        print(response)
         orig_desc = response[
                 response.find("Original:")+len("Original:")
                 :response.find("Retrieved:")
@@ -66,22 +85,39 @@ class Interface:
 class Prompts:
     def __init__(self):
         self.prompt_template = (
+            "Task Information:\n{}\n\n"
             "Original Dataset:\n{}\n\n"
             "Retrieved Dataset:\n{}\n\n"
             "Query:\n{}\n\n"
-            "Requests:\n{}\n\n"
             "Descriptions:\n"
         )
-        self.request_template = (
-            "We retrieve a dataset based on an embedded user query.\n"
-            "Generate a better description for the original dataset and retrieved dataset so that it will be retrieved correctly based on the query.\n"
-            "Alter the undesired retrieved description so that it will not be retrieved based on the query.\n"
-            "Only return the descriptions.\n"
-            "Do not include quotation marks.\n"
-            "Format the response like this [Original: description\nRetrieved: description]\n"
-            "IT IS ORIGINAL AND RETRIEVED ONLY IN THE FORMAT. FORMAT IT RIGHT.\n"
-            "Do not include a revised retrieved section, only include Original and Retrieved.\n\n"
-        )
+        self.task_template = (
+            "We have a system that retrieves datasets based on user queries. The system compares the query with descriptions of original and retrieved datasets. Our goal is to modify these descriptions to ensure the correct dataset is retrieved and irrelevant ones are filtered out.\n"
+            "Format the response like this Original: description\nRetrieved: description\n"
+            )
+        self.messages = [
+                {
+                    "role" : "system",
+                    "content" : "You produce descriptions."
+                }
+            ]
+        self.user_content = {
+                "role" : "user",
+                "content" : "{}"
+                }
+
+    def set_description_prompt(self):
+        self.prompt_template = (
+            "Task Information:\n{}\n\n"
+            "Original Description:\n{}\n\n"
+            "New Description:\n"
+            )
+        
+        self.task_template = (
+                "Create a better description of the original description.\n"
+                "Make it suitable for clustering.\n"
+                "Format the response like this Original: description\nNew: description\n"
+                )
         self.messages = [
                 {
                     "role" : "system",
@@ -106,11 +142,12 @@ class Prompts:
                       retrieved_dataset,
                       query):
         return self.prompt_template.format(
+                self.task_template,
                 dataset,
                 retrieved_dataset,
-                query,
-                self.request_template
+                query
                 )
+
     def format_user_content(self,
                             dataset,
                             retrieved_dataset,

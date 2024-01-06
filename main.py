@@ -42,6 +42,16 @@ def main():
         with open(config.EMBEDDINGS_FILE, 'w') as f:
             json.dump(config.EMBEDDINGS, f)
 
+    print(config.DESCRIPTIONS)
+    if get_user_confirmation("Generate new descriptions? [y/n]\n"):
+        for entry in tqdm(config.DESCRIPTIONS):
+            config.DESCRIPTIONS[entry]['description'] =\
+                    interface.get_description(
+                        config.DESCRIPTIONS[entry]['description']
+                        )
+        with open(config.DESCRIPTIONS_FILE, 'w') as f:
+            json.dump(config.DESCRIPTIONS, f)
+
     if get_user_confirmation("Generate new descriptions? [y/n]\n"):
         for i, query in tqdm(enumerate(config.SPIDER_QUERY_EMBEDDINGS)):
             most_similar_idx =\
@@ -56,23 +66,25 @@ def main():
             if dataset == most_similar_dataset:
                 continue
             print(query['question'])
-            print(key)
-            print(config.DESCRIPTIONS[key]['description'])
-            print(query['db_id'])
-            print(config.DESCRIPTIONS[query['db_id']]['description'])
 
             while query['db_id'] != key:
+                print(query['db_id'], key)
                 orig_desc, ret_desc =\
                         interface.get_descriptions(
                             dataset,
                             most_similar_dataset,
                             query['question']
                             )
-                print(orig_desc)
-                print(ret_desc)
+                print(config.DESCRIPTIONS[query['db_id']]['description'])
+                print(config.DESCRIPTIONS[key]['description'])
                 config.DESCRIPTIONS[query['db_id']]['description'] = orig_desc
                 config.DESCRIPTIONS[key]['description'] = ret_desc
-                #print(config.DESCRIPTIONS[key]['description'])
+                print("---------------------")
+                print(config.DESCRIPTIONS[query['db_id']]['description'])
+                print(config.DESCRIPTIONS[key]['description'])
+                print("\n\n")
+                orig_emb = config.EMBEDDINGS[original_idx]
+                ret_emb = config.EMBEDDINGS[most_similar_idx]
                 config.EMBEDDINGS[original_idx] =\
                         interface.get_embedding(
                             config.DESCRIPTIONS[query['db_id']]['description']
@@ -81,6 +93,11 @@ def main():
                         interface.get_embedding(
                             config.DESCRIPTIONS[key]['description']
                             )
+                if orig_emb == config.EMBEDDINGS[original_idx]:
+                    print("Original embedding unchanged")
+                if ret_emb == config.EMBEDDINGS[most_similar_idx]:
+                    print("Retrieved embedding unchanged")
+
                 most_similar_idx =\
                     most_similar_vector(
                             interface.get_embedding(query['question']),
@@ -89,6 +106,9 @@ def main():
                 key = list(config.DESCRIPTIONS)[most_similar_idx]
                 most_similar_dataset = json.dumps({key : config.DESCRIPTIONS[key]})
                 dataset = json.dumps({query['db_id'] : config.DESCRIPTIONS[query['db_id']]})
+            interface.reset_messages()
+            print("Matched!")
+
 
 if __name__ == "__main__":
     main()
