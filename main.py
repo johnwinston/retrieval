@@ -33,6 +33,7 @@ def main():
     interface = Interface()
 
     if get_user_confirmation("Generate new embeddings? [y/n]\n"):
+        config.EMBEDDINGS = []
         for entry in tqdm(config.DESCRIPTIONS):
             config.EMBEDDINGS.append(
                     interface.get_embedding(

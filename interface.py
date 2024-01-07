@@ -58,11 +58,8 @@ class Interface:
             )
         self.prompt.messages.append(self.prompt.user_content)
         response = self.query_chatGPT(self.prompt.messages)
-        description = response[
-                response.find("New:")+len("New:"):
-                ]
-        print(description)
-        return description.strip()
+        print(response)
+        return response.strip()
 
     def get_descriptions(self,
                         dataset,
@@ -114,9 +111,7 @@ class Prompts:
             )
         
         self.task_template = (
-                "Create a better description of the original description.\n"
-                "Make it suitable for clustering.\n"
-                "Format the response like this Original: description\nNew: description\n"
+                "Create a dataset of concise, clear, and semantically rich sentence descriptions about various everyday objects, activities, and concepts. Each sentence should be unique and provide specific details that distinguish the subject matter from others in a similar category. Avoid ambiguity and overly complex structures. The descriptions should be suitable for generating embeddings that can be effectively clustered, revealing the nuanced differences and similarities between the subjects. Focus on including relevant keywords and context that capture the essence of each subject, ensuring that the content is diverse yet consistently structured for optimal embedding and clustering performance.\n\n"
                 )
         self.messages = [
                 {
